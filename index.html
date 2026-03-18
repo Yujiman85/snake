@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snake Game</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+  <div class="score-bar">
+    <span>Score: <span class="score-value" id="score">0</span></span>
+    <button id="muteBtn" title="Toggle music" style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;line-height:1;" aria-label="Toggle music">&#x1F50A;</button>
+    <span>Your Best: <span class="high-value" id="high">0</span></span>
+  </div>
+  <div style="position:relative">
+    <canvas id="canvas" width="550" height="550"></canvas>
+    <div class="overlay" id="startScreen">
+      <canvas class="scene-canvas" id="sceneCanvas" width="280" height="30"></canvas>
+      <h2 style="color:#22d3ee;margin-bottom:-8px">Snake</h2>
+      <div class="difficulty-toggle">
+        <button class="diff-btn active" id="diffNormal" data-mode="normal">Normal</button>
+        <button class="diff-btn" id="diffExpert" data-mode="expert">Expert</button>
+      </div>
+      <div class="leaderboard" id="startLeaderboard"></div>
+      <div class="arcade-stages">
+        <div class="arcade-title" id="arcadeToggle">Can You Survive? <span class="arcade-arrow"></span></div>
+        <div class="arcade-list" id="arcadeList">
+          <div class="stage"><span class="stage-range">0-9</span> <span class="stage-desc">The calm before the storm...</span></div>
+          <div class="stage"><span class="stage-range">10-49</span> <span class="stage-desc">More food! More speed! MORE DANGER!</span></div>
+          <div class="stage stage-boss"><span class="stage-range">50</span> <span class="stage-desc">WALLS APPEAR. No turning back!</span></div>
+          <div class="stage stage-boss"><span class="stage-range">70+</span> <span class="stage-desc">New walls every 20 pts. Only legends survive.</span></div>
+        </div>
+      </div>
+      <div class="controls-hint" id="controlsNormal">
+        <div class="key-group">
+          <div class="key-row"><kbd>W</kbd></div>
+          <div class="key-row"><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></div>
+        </div>
+        <span class="or-text">or</span>
+        <div class="key-group">
+          <div class="key-row"><kbd>&uarr;</kbd></div>
+          <div class="key-row"><kbd>&larr;</kbd><kbd>&darr;</kbd><kbd>&rarr;</kbd></div>
+        </div>
+      </div>
+      <div class="controls-hint controls-expert" id="controlsExpert" style="display:none;">
+        <div class="key-group">
+          <div class="key-label" style="color:#22d3ee;">Snake 1</div>
+          <div class="key-row"><kbd>W</kbd></div>
+          <div class="key-row"><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></div>
+        </div>
+        <div class="key-group">
+          <div class="key-label" style="color:#f472b6;">Snake 2</div>
+          <div class="key-row"><kbd>&uarr;</kbd></div>
+          <div class="key-row"><kbd>&larr;</kbd><kbd>&darr;</kbd><kbd>&rarr;</kbd></div>
+        </div>
+      </div>
+      <div class="mobile-controls-toggle">
+        <button class="diff-btn active" id="ctrlSwipe" data-ctrl="swipe">Swipe</button>
+        <button class="diff-btn" id="ctrlDpad" data-ctrl="dpad">D-Pad</button>
+      </div>
+      <div class="play-row">
+        <button class="btn" id="startBtn">Play</button>
+        <button class="info-btn" id="infoBtn" aria-label="Info">?</button>
+      </div>
+      <span class="space-hint" style="font-size:12px;color:#475569;margin-top:-6px;">or press Space</span>
+    </div>
+    <div class="overlay" id="gameOver">
+      <h2>Game Over</h2>
+      <p class="final-score">Score: <strong id="finalScore">0</strong></p>
+      <div id="highScoreEntry" style="display:none">
+        <div class="name-entry">
+          <span class="new-high">New Top 10 Score!</span>
+          <label for="playerName">Enter Name</label>
+          <input type="text" id="playerName" maxlength="7" placeholder="7 chars" autocomplete="off" spellcheck="false">
+          <button class="btn btn-small" id="submitScore">Submit</button>
+        </div>
+      </div>
+      <div class="leaderboard" id="gameOverLeaderboard"></div>
+      <div class="btn-row">
+        <button class="btn" id="restartBtn">Restart</button>
+        <button class="btn btn-secondary" id="menuBtn">Menu</button>
+      </div>
+    </div>
+  </div>
+  <div class="dpad" id="dpad">
+    <div class="dpad-row">
+      <button class="dpad-btn dpad-up" data-dir="up" aria-label="Up"></button>
+    </div>
+    <div class="dpad-row">
+      <button class="dpad-btn dpad-left" data-dir="left" aria-label="Left"></button>
+      <button class="dpad-btn dpad-down" data-dir="down" aria-label="Down"></button>
+      <button class="dpad-btn dpad-right" data-dir="right" aria-label="Right"></button>
+    </div>
+  </div>
+  <div class="info-modal-backdrop" id="infoBackdrop">
+    <div class="info-modal">
+      <button class="info-close" id="infoClose">&times;</button>
+      <h3>Welcome to Snake!</h3>
+      <p>Guide your snake to eat food and grow as long as you can. But be careful — the faster you grow, the harder it gets!</p>
+      <p><strong style="color:#22d3ee">Normal Mode</strong> — Classic snake with progressive difficulty. Speed increases as you score, and at <strong>50 points</strong> obstacle walls start appearing!</p>
+      <p><strong style="color:#f472b6">Expert Mode: Simulsnake!</strong> — Control <strong>two snakes at once!</strong> WASD for the cyan snake, arrow keys for the pink. If either one dies, it's game over. (Desktop only)</p>
+      <p>Compete for a spot on the <strong style="color:#facc15">Top 10 Leaderboard</strong> and prove you're the best!</p>
+    </div>
+  </div>
+  <p style="font-size:11px;color:#2a2a4a;margin-top:4px;letter-spacing:1px;">If you've found this somehow, have fun!</p>
+</div>
+<script>
+document.getElementById('arcadeToggle').addEventListener('click', () => {
+  document.querySelector('.arcade-stages').classList.toggle('open');
+});
+const infoBackdrop = document.getElementById('infoBackdrop');
+document.getElementById('infoBtn').addEventListener('click', () => {
+  infoBackdrop.classList.add('active');
+});
+document.getElementById('infoClose').addEventListener('click', () => {
+  infoBackdrop.classList.remove('active');
+});
+infoBackdrop.addEventListener('click', (e) => {
+  if (e.target === infoBackdrop) infoBackdrop.classList.remove('active');
+});
+</script>
+<script type="module" src="game.js"></script>
+</body>
+</html>
