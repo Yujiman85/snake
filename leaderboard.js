@@ -14,9 +14,11 @@ const firebaseConfig = {
 
 const fbApp = initializeApp(firebaseConfig);
 const db = getDatabase(fbApp);
+const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+const prefix = isDev ? 'leaderboard-dev' : 'leaderboard';
 const refs = {
-  normal: ref(db, 'leaderboard'),
-  expert: ref(db, 'leaderboard-expert')
+  normal: ref(db, prefix),
+  expert: ref(db, `${prefix}-expert`)
 };
 
 let cache = { normal: [], expert: [] };
