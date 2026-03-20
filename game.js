@@ -541,6 +541,11 @@ function renderLoop() {
     ctx.shadowBlur = 20;
     ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
     ctx.shadowBlur = 0;
+    if (window.innerWidth > 600) {
+      ctx.font = '18px "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = '#64748b';
+      ctx.fillText('Spacebar to resume', canvas.width / 2, canvas.height / 2 + 50);
+    }
     ctx.restore();
   }
 }
