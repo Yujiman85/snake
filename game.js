@@ -805,21 +805,20 @@ document.addEventListener('keydown', (e) => {
 let mobileControlType = 'swipe';
 const dpadEl = document.getElementById('dpad');
 const ctrlSwipeBtn = document.getElementById('ctrlSwipe');
+const ctrlTapBtn = document.getElementById('ctrlTap');
 const ctrlDpadBtn = document.getElementById('ctrlDpad');
 
-ctrlSwipeBtn.addEventListener('click', () => {
-  mobileControlType = 'swipe';
-  ctrlSwipeBtn.classList.add('active');
-  ctrlDpadBtn.classList.remove('active');
-  dpadEl.classList.remove('active');
-});
+function setMobileControl(type) {
+  mobileControlType = type;
+  ctrlSwipeBtn.classList.toggle('active', type === 'swipe');
+  ctrlTapBtn.classList.toggle('active', type === 'tap');
+  ctrlDpadBtn.classList.toggle('active', type === 'dpad');
+  dpadEl.classList.toggle('active', type === 'dpad');
+}
 
-ctrlDpadBtn.addEventListener('click', () => {
-  mobileControlType = 'dpad';
-  ctrlDpadBtn.classList.add('active');
-  ctrlSwipeBtn.classList.remove('active');
-  dpadEl.classList.add('active');
-});
+ctrlSwipeBtn.addEventListener('click', () => setMobileControl('swipe'));
+ctrlTapBtn.addEventListener('click', () => setMobileControl('tap'));
+ctrlDpadBtn.addEventListener('click', () => setMobileControl('dpad'));
 
 // D-pad input
 dpadEl.querySelectorAll('.dpad-btn[data-dir]').forEach(btn => {
@@ -852,22 +851,41 @@ canvas.addEventListener('touchmove', (e) => {
 
 canvas.addEventListener('touchend', (e) => {
   e.preventDefault();
-  if (!running || mobileControlType !== 'swipe') return;
-  const touch = e.changedTouches[0];
-  const dx = touch.clientX - touchStartX;
-  const dy = touch.clientY - touchStartY;
-  const minSwipe = 20;
+  if (!running) return;
 
-  if (Math.abs(dx) < minSwipe && Math.abs(dy) < minSwipe) return;
+  if (mobileControlType === 'swipe') {
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - touchStartX;
+    const dy = touch.clientY - touchStartY;
+    const minSwipe = 20;
 
-  if (Math.abs(dx) > Math.abs(dy)) {
-    // Horizontal swipe
-    if (dx > 0 && dir.x !== -1) nextDir = { x: 1, y: 0 };
-    else if (dx < 0 && dir.x !== 1) nextDir = { x: -1, y: 0 };
-  } else {
-    // Vertical swipe
-    if (dy > 0 && dir.y !== -1) nextDir = { x: 0, y: 1 };
-    else if (dy < 0 && dir.y !== 1) nextDir = { x: 0, y: -1 };
+    if (Math.abs(dx) < minSwipe && Math.abs(dy) < minSwipe) return;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+      if (dx > 0 && dir.x !== -1) nextDir = { x: 1, y: 0 };
+      else if (dx < 0 && dir.x !== 1) nextDir = { x: -1, y: 0 };
+    } else {
+      if (dy > 0 && dir.y !== -1) nextDir = { x: 0, y: 1 };
+      else if (dy < 0 && dir.y !== 1) nextDir = { x: 0, y: -1 };
+    }
+  } else if (mobileControlType === 'tap') {
+    const touch = e.changedTouches[0];
+    const rect = canvas.getBoundingClientRect();
+    // Convert tap to grid coordinates
+    const tapX = (touch.clientX - rect.left) / rect.width * GRID;
+    const tapY = (touch.clientY - rect.top) / rect.height * GRID;
+    const head = snake[0];
+    const dx = tapX - head.x;
+    const dy = tapY - head.y;
+
+    // Turn toward the tap along the axis with the greater difference
+    if (Math.abs(dx) > Math.abs(dy)) {
+      if (dx > 0 && dir.x !== -1) nextDir = { x: 1, y: 0 };
+      else if (dx < 0 && dir.x !== 1) nextDir = { x: -1, y: 0 };
+    } else {
+      if (dy > 0 && dir.y !== -1) nextDir = { x: 0, y: 1 };
+      else if (dy < 0 && dir.y !== 1) nextDir = { x: 0, y: -1 };
+    }
   }
 }, { passive: false });
 
