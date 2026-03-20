@@ -114,14 +114,17 @@ highEl.textContent = highScore;
 playerNameEl.value = localStorage.getItem('snakePlayerName') || '';
 
 function init() {
-  snake = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
-  dir = { x: 1, y: 0 };
-  nextDir = { x: 1, y: 0 };
   if (expertMode) {
-    snake2 = [{ x: 10, y: 14 }, { x: 11, y: 14 }, { x: 12, y: 14 }];
+    snake = [{ x: 10, y: 6 }, { x: 11, y: 6 }, { x: 12, y: 6 }];
+    dir = { x: -1, y: 0 };
+    nextDir = { x: -1, y: 0 };
+    snake2 = [{ x: 10, y: 12 }, { x: 11, y: 12 }, { x: 12, y: 12 }];
     dir2 = { x: -1, y: 0 };
     nextDir2 = { x: -1, y: 0 };
   } else {
+    snake = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
+    dir = { x: 1, y: 0 };
+    nextDir = { x: 1, y: 0 };
     snake2 = null;
     dir2 = null;
     nextDir2 = null;
@@ -145,16 +148,23 @@ function init() {
   pauseBtn.textContent = '\u23F8';
   foods = [];
   spawnAllFood();
-  running = true;
   clearInterval(gameLoop);
   currentTickInterval = SPEED_INITIAL;
-  gameLoop = setInterval(update, SPEED_INITIAL);
-  lastTickTime = performance.now();
   prevSnake = snake.map(s => ({ ...s }));
   prevSnake2 = snake2 ? snake2.map(s => ({ ...s })) : [];
   if (!animFrameId) animFrameId = requestAnimationFrame(renderLoop);
   bgMusic.currentTime = 0;
   bgMusic.play().catch(() => {});
+
+  if (expertMode) {
+    // Show initial state then countdown before starting
+    running = false;
+    cutscene = { phase: 'startCountdown', timer: 0, count: 3 };
+  } else {
+    running = true;
+    lastTickTime = performance.now();
+    gameLoop = setInterval(update, SPEED_INITIAL);
+  }
 }
 
 function getFoodCount() {
@@ -348,6 +358,50 @@ function runCutscene() {
   }
 }
 
+function runStartCountdown() {
+  if (!cutscene) return;
+
+  // Draw the initial game state as background
+  drawGameState();
+
+  const { count, timer } = cutscene;
+  const progress = timer / 40;
+  const scale = 1 + (1 - progress) * 0.5;
+  const alpha = Math.max(0, 1 - progress * 0.5);
+
+  // Dim overlay
+  ctx.fillStyle = 'rgba(10, 10, 20, 0.4)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.save();
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.scale(scale, scale);
+  ctx.font = 'bold 72px "Segoe UI", system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = `rgba(244, 114, 182, ${alpha})`;
+  ctx.shadowColor = '#f472b6';
+  ctx.shadowBlur = 30 * alpha;
+  ctx.fillText(count, 0, 0);
+  ctx.shadowBlur = 0;
+  ctx.restore();
+
+  cutscene.timer++;
+  if (cutscene.timer > 40) {
+    cutscene.count--;
+    cutscene.timer = 0;
+    if (cutscene.count <= 0) {
+      cutscene = null;
+      running = true;
+      lastTickTime = performance.now();
+      prevSnake = snake.map(s => ({ ...s }));
+      if (snake2) prevSnake2 = snake2.map(s => ({ ...s }));
+      gameLoop = setInterval(update, SPEED_INITIAL);
+      return;
+    }
+  }
+}
+
 function drawGameState() {
   // Redraw the game without the cutscene overlay (reuse draw logic)
   ctx.fillStyle = '#111122';
@@ -366,8 +420,8 @@ function drawGameState() {
     ctx.stroke();
   }
 
-  drawSnake(snake, dir, '#22d3ee', '34, 211, 238');
-  if (snake2) drawSnake(snake2, dir2, '#f472b6', '244, 114, 182');
+  drawSnakeInterp(snake, dir, '#22d3ee', '34, 211, 238');
+  if (snake2) drawSnakeInterp(snake2, dir2, '#f472b6', '244, 114, 182');
   ctx.shadowBlur = 0;
 
   const pulse = 0.8 + 0.2 * Math.sin(Date.now() / 200);
@@ -472,7 +526,10 @@ function lerpSnake(prev, curr, t) {
 
 function renderLoop() {
   animFrameId = requestAnimationFrame(renderLoop);
-  if (cutscene) return; // cutscene handles its own drawing
+  if (cutscene) {
+    if (cutscene.phase === 'startCountdown') runStartCountdown();
+    return;
+  }
 
   const now = performance.now();
   let t = Math.min(1, (now - lastTickTime) / currentTickInterval);
@@ -616,8 +673,8 @@ function draw() {
   updateParticles();
   if (eatFlash > 0) eatFlash--;
 
-  drawSnake(snake, dir, '#22d3ee', '34, 211, 238');
-  if (snake2) drawSnake(snake2, dir2, '#f472b6', '244, 114, 182');
+  drawSnakeInterp(snake, dir, '#22d3ee', '34, 211, 238');
+  if (snake2) drawSnakeInterp(snake2, dir2, '#f472b6', '244, 114, 182');
   ctx.shadowBlur = 0;
 
   const pulse = 0.8 + 0.2 * Math.sin(Date.now() / 200);
