@@ -35,6 +35,10 @@ let lastTickTime = 0;
 let currentTickInterval = SPEED_INITIAL;
 let animFrameId = null;
 
+// Pause state
+let paused = false;
+const pauseBtn = document.getElementById('pauseBtn');
+
 // Difficulty toggle
 const diffNormalBtn = document.getElementById('diffNormal');
 const diffExpertBtn = document.getElementById('diffExpert');
@@ -136,6 +140,9 @@ function init() {
   highScoreEntryEl.style.display = 'none';
   gameOverEl.classList.remove('active');
   startScreenEl.classList.remove('active');
+  paused = false;
+  pauseBtn.style.display = 'inline-block';
+  pauseBtn.textContent = '\u23F8';
   foods = [];
   spawnAllFood();
   running = true;
@@ -469,7 +476,7 @@ function renderLoop() {
 
   const now = performance.now();
   let t = Math.min(1, (now - lastTickTime) / currentTickInterval);
-  if (!running) t = 1; // snap to final position when stopped
+  if (!running || paused) t = 1; // snap to final position when stopped/paused
 
   const interpSnake = lerpSnake(prevSnake, snake, t);
   const interpSnake2 = snake2 ? lerpSnake(prevSnake2, snake2, t) : null;
@@ -520,6 +527,22 @@ function renderLoop() {
   }
 
   drawParticles();
+
+  // Pause overlay
+  if (paused) {
+    ctx.fillStyle = 'rgba(10, 10, 20, 0.5)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.font = 'bold 64px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#22d3ee';
+    ctx.shadowColor = '#22d3ee';
+    ctx.shadowBlur = 20;
+    ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
 }
 
 function drawSnakeInterp(s, d, color, colorRgb) {
@@ -691,7 +714,9 @@ function roundRect(x, y, w, h, r) {
 
 async function endGame() {
   running = false;
+  paused = false;
   clearInterval(gameLoop);
+  pauseBtn.style.display = 'none';
   bgMusic.pause();
   if (score > highScore) {
     highScore = score;
@@ -740,7 +765,7 @@ playerNameEl.addEventListener('keydown', (e) => {
 
 // Input
 document.addEventListener('keydown', (e) => {
-  if (!running) return;
+  if (!running || paused) return;
   const key = e.key.toLowerCase();
 
   if (expertMode) {
@@ -791,13 +816,35 @@ muteBtn.addEventListener('click', () => {
   muteBtn.textContent = musicMuted ? '\u{1F507}' : '\u{1F50A}';
 });
 
-// Spacebar to start/restart
+function togglePause() {
+  if (!running && !paused) return;
+  if (cutscene) return;
+
+  paused = !paused;
+  if (paused) {
+    clearInterval(gameLoop);
+    pauseBtn.textContent = '\u25B6';
+  } else {
+    lastTickTime = performance.now();
+    prevSnake = snake.map(s => ({ ...s }));
+    if (snake2) prevSnake2 = snake2.map(s => ({ ...s }));
+    gameLoop = setInterval(update, currentTickInterval);
+    pauseBtn.textContent = '\u23F8';
+  }
+}
+
+pauseBtn.addEventListener('click', togglePause);
+
+// Spacebar to start/restart/pause
 document.addEventListener('keydown', (e) => {
-  if (e.key === ' ' && !running && !cutscene) {
+  if (e.key === ' ') {
     e.preventDefault();
-    // Don't trigger if typing in name input
     if (document.activeElement === playerNameEl) return;
-    init();
+    if (running || paused) {
+      togglePause();
+    } else if (!cutscene) {
+      init();
+    }
   }
 });
 
@@ -824,7 +871,7 @@ ctrlDpadBtn.addEventListener('click', () => setMobileControl('dpad'));
 dpadEl.querySelectorAll('.dpad-btn[data-dir]').forEach(btn => {
   btn.addEventListener('touchstart', (e) => {
     e.preventDefault();
-    if (!running) return;
+    if (!running || paused) return;
     switch (btn.dataset.dir) {
       case 'up':    if (dir.y !== 1)  nextDir = { x: 0, y: -1 }; break;
       case 'down':  if (dir.y !== -1) nextDir = { x: 0, y: 1 };  break;
@@ -851,7 +898,7 @@ canvas.addEventListener('touchmove', (e) => {
 
 canvas.addEventListener('touchend', (e) => {
   e.preventDefault();
-  if (!running) return;
+  if (!running || paused) return;
 
   if (mobileControlType === 'swipe') {
     const touch = e.changedTouches[0];

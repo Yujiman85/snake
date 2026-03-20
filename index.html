@@ -51,7 +51,10 @@
 <div class="container">
   <div class="score-bar">
     <span>Score: <span class="score-value" id="score">0</span></span>
-    <button id="muteBtn" title="Toggle music" style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;line-height:1;" aria-label="Toggle music">&#x1F50A;</button>
+    <div style="display:flex;gap:6px;">
+      <button id="pauseBtn" title="Pause" style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;line-height:1;display:none;color:#e0e0e0;" aria-label="Pause">&#x23F8;</button>
+      <button id="muteBtn" title="Toggle music" style="background:#1a1a2e;border:1px solid #2a2a4a;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;line-height:1;" aria-label="Toggle music">&#x1F50A;</button>
+    </div>
     <span>Your Best: <span class="high-value" id="high">0</span></span>
   </div>
   <div style="position:relative">
