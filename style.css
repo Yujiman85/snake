@@ -141,11 +141,13 @@ canvas {
   transition: all 0.2s;
 }
 
-.btn:hover,
-.btn:focus-visible {
+.btn:hover {
   background: #06b6d4;
   box-shadow: 0 0 20px rgba(34, 211, 238, 0.4);
   transform: translateY(-1px);
+}
+
+.btn:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 2px;
 }
@@ -584,10 +586,12 @@ kbd {
   justify-content: center;
 }
 
-.info-btn:hover,
-.info-btn:focus-visible {
+.info-btn:hover {
   color: #facc15;
   border-color: #facc15;
+}
+
+.info-btn:focus-visible {
   outline: 2px solid #facc15;
   outline-offset: 2px;
 }
@@ -648,9 +652,11 @@ kbd {
   line-height: 1;
 }
 
-.info-close:hover,
-.info-close:focus-visible {
+.info-close:hover {
   color: #e0e0e0;
+}
+
+.info-close:focus-visible {
   outline: 2px solid #e0e0e0;
   outline-offset: 2px;
 }
