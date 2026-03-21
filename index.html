@@ -57,11 +57,12 @@
     </div>
     <span>Your Best: <span class="high-value" id="high">0</span></span>
   </div>
+  <div aria-live="polite" aria-atomic="true" id="a11yAnnounce" class="sr-only"></div>
   <div style="position:relative">
-    <canvas id="canvas" width="550" height="550"></canvas>
+    <canvas id="canvas" width="550" height="550" role="application" aria-label="Snake game board — use arrow keys or WASD to control the snake"></canvas>
     <div class="overlay" id="startScreen">
       <canvas class="scene-canvas" id="sceneCanvas" width="280" height="30"></canvas>
-      <h2 style="color:#22d3ee;margin-bottom:-8px">Snake</h2>
+      <h1 style="color:#22d3ee;margin-bottom:-8px">Snake</h1>
       <div class="difficulty-toggle">
         <button class="diff-btn" id="diffEasy" data-mode="easy">Easy</button>
         <button class="diff-btn active" id="diffNormal" data-mode="normal">Normal</button>
@@ -70,7 +71,7 @@
       <p id="easyDisclaimer" style="display:none;font-size:11px;color:#4ade80;margin:-4px 0;font-style:italic;">Easy mode scores are not recorded on the leaderboard</p>
       <div class="leaderboard" id="startLeaderboard"></div>
       <div class="arcade-stages">
-        <div class="arcade-title" id="arcadeToggle">Can You Survive? <span class="arcade-arrow"></span></div>
+        <button class="arcade-title" id="arcadeToggle" aria-expanded="false" aria-controls="arcadeList">Can You Survive? <span class="arcade-arrow"></span></button>
         <div class="arcade-list" id="arcadeList">
           <div class="stage"><span class="stage-range">0-9</span> <span class="stage-desc">The calm before the storm...</span></div>
           <div class="stage"><span class="stage-range">10-49</span> <span class="stage-desc">More food! More speed! MORE DANGER!</span></div>
@@ -120,7 +121,7 @@
         <div class="name-entry">
           <span class="new-high">New Top 10 Score!</span>
           <label for="playerName">Enter Name</label>
-          <input type="text" id="playerName" maxlength="7" placeholder="7 chars" autocomplete="off" spellcheck="false">
+          <input type="text" id="playerName" name="playerName" maxlength="7" placeholder="7 chars" autocomplete="off" spellcheck="false">
           <button class="btn btn-small" id="submitScore">Submit</button>
         </div>
       </div>
@@ -142,32 +143,103 @@
     </div>
   </div>
   <div class="info-modal-backdrop" id="infoBackdrop">
-    <div class="info-modal">
-      <button class="info-close" id="infoClose">&times;</button>
-      <h3>Welcome to Snake!</h3>
+    <div class="info-modal" role="dialog" aria-modal="true" aria-labelledby="infoHeading">
+      <button class="info-close" id="infoClose" aria-label="Close">&times;</button>
+      <h3 id="infoHeading">Welcome to Snake!</h3>
       <p><strong style="color:#4ade80">Easy Mode</strong> — A more relaxed experience. Slower speed, gentler ramp-up, and no obstacles. Scores are not recorded on the leaderboard.</p>
       <p><strong style="color:#22d3ee">Normal Mode</strong> — Classic snake with progressive difficulty. Speed increases as you score, and at <strong>50 points</strong> obstacle walls start appearing!</p>
       <p><strong style="color:#f472b6">Expert Mode: Simulsnake!</strong> — Control <strong>two snakes at once!</strong> WASD for the cyan snake, arrow keys for the pink. If either one dies, it's game over. (Desktop only)</p>
       <p>Compete for a spot on the <strong style="color:#facc15">Top 10 Leaderboard</strong>!</p>
     </div>
   </div>
+  <div class="info-modal-backdrop" id="settingsBackdrop">
+    <div class="info-modal" role="dialog" aria-modal="true" aria-labelledby="settingsHeading">
+      <button class="info-close" id="settingsClose" aria-label="Close">&times;</button>
+      <h3 id="settingsHeading">Settings</h3>
+      <div class="setting-row">
+        <label for="accessibilityToggle">Accessibility Mode</label>
+        <button class="setting-toggle" id="accessibilityToggle" role="switch" aria-checked="false">OFF</button>
+      </div>
+      <p class="setting-desc">High contrast colors, larger text, and screen reader support.</p>
+    </div>
+  </div>
   <p style="font-size:11px;color:#2a2a4a;margin-top:4px;letter-spacing:1px;">If you've found this somehow, have fun!</p>
-  <p style="font-size:11px;color:#2a2a4a;letter-spacing:1px;">Made by <a href="https://github.com/Yujiman85/snake" target="_blank" rel="noopener" style="color:#2a2a4a;text-decoration:underline;">Yujiman</a></p>
+  <p style="font-size:11px;color:#2a2a4a;letter-spacing:1px;">Made by <a href="https://github.com/Yujiman85/snake" target="_blank" rel="noopener" style="color:#2a2a4a;text-decoration:underline;">Yujiman <span class="sr-only">(opens in new window)</span></a></p>
 </div>
 <script>
-document.getElementById('arcadeToggle').addEventListener('click', () => {
-  document.querySelector('.arcade-stages').classList.toggle('open');
+const arcadeToggle = document.getElementById('arcadeToggle');
+arcadeToggle.addEventListener('click', () => {
+  const stages = document.querySelector('.arcade-stages');
+  stages.classList.toggle('open');
+  arcadeToggle.setAttribute('aria-expanded', stages.classList.contains('open'));
 });
+
+function openModal(backdrop, closeBtn) {
+  backdrop.classList.add('active');
+  closeBtn.focus();
+}
+function closeModal(backdrop, opener) {
+  backdrop.classList.remove('active');
+  if (opener) opener.focus();
+}
+
 const infoBackdrop = document.getElementById('infoBackdrop');
-document.getElementById('infoBtn').addEventListener('click', () => {
-  infoBackdrop.classList.add('active');
-});
-document.getElementById('infoClose').addEventListener('click', () => {
-  infoBackdrop.classList.remove('active');
-});
+const infoBtn = document.getElementById('infoBtn');
+const infoClose = document.getElementById('infoClose');
+infoBtn.addEventListener('click', () => openModal(infoBackdrop, infoClose));
+infoClose.addEventListener('click', () => closeModal(infoBackdrop, infoBtn));
 infoBackdrop.addEventListener('click', (e) => {
-  if (e.target === infoBackdrop) infoBackdrop.classList.remove('active');
+  if (e.target === infoBackdrop) closeModal(infoBackdrop, infoBtn);
 });
+
+const settingsBackdrop = document.getElementById('settingsBackdrop');
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsClose = document.getElementById('settingsClose');
+settingsBtn.addEventListener('click', () => openModal(settingsBackdrop, settingsClose));
+settingsClose.addEventListener('click', () => closeModal(settingsBackdrop, settingsBtn));
+settingsBackdrop.addEventListener('click', (e) => {
+  if (e.target === settingsBackdrop) closeModal(settingsBackdrop, settingsBtn);
+});
+
+// Escape key closes modals + focus trap
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (infoBackdrop.classList.contains('active')) closeModal(infoBackdrop, infoBtn);
+    if (settingsBackdrop.classList.contains('active')) closeModal(settingsBackdrop, settingsBtn);
+  }
+  // Focus trap for active modals
+  if (e.key === 'Tab') {
+    const activeBackdrop = [infoBackdrop, settingsBackdrop].find(b => b.classList.contains('active'));
+    if (!activeBackdrop) return;
+    const modal = activeBackdrop.querySelector('.info-modal');
+    const focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+});
+const accessibilityToggle = document.getElementById('accessibilityToggle');
+accessibilityToggle.addEventListener('click', () => {
+  const on = !document.body.classList.contains('a11y');
+  document.body.classList.toggle('a11y', on);
+  accessibilityToggle.classList.toggle('active', on);
+  accessibilityToggle.textContent = on ? 'ON' : 'OFF';
+  accessibilityToggle.setAttribute('aria-checked', on);
+  localStorage.setItem('snakeA11y', on ? '1' : '0');
+});
+if (localStorage.getItem('snakeA11y') === '1') {
+  document.body.classList.add('a11y');
+  accessibilityToggle.classList.add('active');
+  accessibilityToggle.textContent = 'ON';
+  accessibilityToggle.setAttribute('aria-checked', 'true');
+}
 </script>
 <script type="module" src="game.js"></script>
 </body>
