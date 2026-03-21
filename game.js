@@ -40,6 +40,9 @@ let animFrameId = null;
 
 // Pause state
 let paused = false;
+
+// Accessibility helper
+function isA11y() { return document.body.classList.contains('a11y'); }
 const pauseBtn = document.getElementById('pauseBtn');
 
 // Difficulty toggle
@@ -48,7 +51,7 @@ const diffNormalBtn = document.getElementById('diffNormal');
 const diffExpertBtn = document.getElementById('diffExpert');
 const controlsNormal = document.getElementById('controlsNormal');
 const controlsExpert = document.getElementById('controlsExpert');
-const startTitle = startScreenEl.querySelector('h2');
+const startTitle = startScreenEl.querySelector('h1');
 const startBtn = document.getElementById('startBtn');
 const easyDisclaimer = document.getElementById('easyDisclaimer');
 
@@ -483,6 +486,7 @@ function moveSnake(s, d, nd, otherSnake) {
     foods.splice(eatenIndex, 1);
     score++;
     scoreEl.textContent = score;
+    if (isA11y()) document.getElementById('a11yAnnounce').textContent = `Score: ${score}`;
     eatFlash = 8;
     spawnParticles(head.x * TILE + TILE / 2, head.y * TILE + TILE / 2);
     return 'ate';
@@ -561,8 +565,9 @@ function renderLoop() {
   ctx.fillStyle = '#111122';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.02)';
-  ctx.lineWidth = 0.5;
+  const a11y = isA11y();
+  ctx.strokeStyle = a11y ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)';
+  ctx.lineWidth = a11y ? 1 : 0.5;
   for (let i = 0; i <= GRID; i++) {
     ctx.beginPath();
     ctx.moveTo(i * TILE, 0);
@@ -576,17 +581,21 @@ function renderLoop() {
 
   updateParticles();
 
-  const snakeColor = easyMode ? '#4ade80' : '#22d3ee';
-  const snakeRgb = easyMode ? '74, 222, 128' : '34, 211, 238';
+  const snakeColor = easyMode ? (a11y ? '#86efac' : '#4ade80') : (a11y ? '#5eead4' : '#22d3ee');
+  const snakeRgb = easyMode ? (a11y ? '134, 239, 172' : '74, 222, 128') : (a11y ? '94, 234, 212' : '34, 211, 238');
   drawSnakeInterp(interpSnake, dir, snakeColor, snakeRgb);
-  if (interpSnake2) drawSnakeInterp(interpSnake2, dir2, '#f472b6', '244, 114, 182');
+  const s2Color = a11y ? '#f9a8d4' : '#f472b6';
+  const s2Rgb = a11y ? '249, 168, 212' : '244, 114, 182';
+  if (interpSnake2) drawSnakeInterp(interpSnake2, dir2, s2Color, s2Rgb);
   ctx.shadowBlur = 0;
 
   const pulse = 0.8 + 0.2 * Math.sin(Date.now() / 200);
+  const foodColor = a11y ? '255, 100, 100' : '239, 68, 68';
+  const foodHex = a11y ? '#ff6464' : '#ef4444';
   foods.forEach(f => {
-    ctx.fillStyle = `rgba(239, 68, 68, ${pulse})`;
-    ctx.shadowColor = '#ef4444';
-    ctx.shadowBlur = 12;
+    ctx.fillStyle = `rgba(${foodColor}, ${pulse})`;
+    ctx.shadowColor = foodHex;
+    ctx.shadowBlur = a11y ? 16 : 12;
     ctx.beginPath();
     ctx.arc(f.x * TILE + TILE / 2, f.y * TILE + TILE / 2, TILE / 2 - 2, 0, Math.PI * 2);
     ctx.fill();
@@ -811,6 +820,7 @@ async function endGame() {
     localStorage.setItem('snakeHigh', String(highScore));
   }
   finalScoreEl.textContent = score;
+  if (isA11y()) document.getElementById('a11yAnnounce').textContent = `Game over. Final score: ${score}`;
   pendingScore = score;
 
   const mode = expertMode ? 'expert' : 'normal';

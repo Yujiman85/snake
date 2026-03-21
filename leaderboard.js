@@ -70,9 +70,9 @@ export function renderLeaderboard(containerId, activeTab = 'normal') {
 
   let html = `
     <h3>Top 10 Leaderboard</h3>
-    <div class="lb-tabs">
-      <button class="lb-tab lb-tab-normal ${normalActive}" data-tab="normal">Normal</button>
-      <button class="lb-tab lb-tab-expert ${expertActive}" data-tab="expert">Expert</button>
+    <div class="lb-tabs" role="tablist" aria-label="Leaderboard">
+      <button class="lb-tab lb-tab-normal ${normalActive}" data-tab="normal" role="tab" aria-selected="${normalActive ? 'true' : 'false'}" aria-label="Normal mode leaderboard">Normal</button>
+      <button class="lb-tab lb-tab-expert ${expertActive}" data-tab="expert" role="tab" aria-selected="${expertActive ? 'true' : 'false'}" aria-label="Expert mode leaderboard">Expert</button>
     </div>
     <div class="lb-panel ${normalActive === 'active' ? '' : 'lb-hidden'}" data-panel="normal">
       ${renderList(cache.normal, 'lb-normal')}
@@ -86,9 +86,10 @@ export function renderLeaderboard(containerId, activeTab = 'normal') {
   // Tab click handlers
   container.querySelectorAll('.lb-tab').forEach(tab => {
     tab.addEventListener('click', () => {
-      container.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+      container.querySelectorAll('.lb-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
       container.querySelectorAll('.lb-panel').forEach(p => p.classList.add('lb-hidden'));
       tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
       container.querySelector(`[data-panel="${tab.dataset.tab}"]`).classList.remove('lb-hidden');
       // Start auto-scroll on newly visible list
       const list = container.querySelector(`[data-panel="${tab.dataset.tab}"] .lb-list`);
