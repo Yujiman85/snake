@@ -60,6 +60,7 @@
     </div>
     <span>Your Best: <span class="high-value" id="high">0</span></span>
   </div>
+  <div id="offlineBanner" class="offline-banner" style="display:none;" role="status">Offline — Leaderboard unavailable</div>
   <div aria-live="polite" aria-atomic="true" id="a11yAnnounce" class="sr-only"></div>
   <div style="position:relative">
     <canvas id="canvas" width="550" height="550" role="application" aria-label="Snake game board — use arrow keys or WASD to control the snake"></canvas>
@@ -246,6 +247,13 @@ if (localStorage.getItem('snakeA11y') === '1') {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js');
 }
+const offlineBanner = document.getElementById('offlineBanner');
+function updateOnlineStatus() {
+  offlineBanner.style.display = navigator.onLine ? 'none' : 'block';
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
 </script>
 <script type="module" src="game.js"></script>
 </body>

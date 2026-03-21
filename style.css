@@ -808,6 +808,20 @@ kbd {
   border-left-color: #0f0f0f;
 }
 
+.offline-banner {
+  width: 550px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 6px;
+  padding: 4px 12px;
+  margin-top: -8px;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -903,6 +917,10 @@ body.a11y .info-modal p {
   .score-bar {
     width: calc(100vw - 16px);
     font-size: 14px;
+  }
+
+  .offline-banner {
+    width: calc(100vw - 16px);
   }
 
   .score-bar span {
