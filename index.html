@@ -45,6 +45,9 @@
 </script>
 
 <link rel="icon" href="favicon.ico" type="image/x-icon">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#111122">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -239,6 +242,9 @@ if (localStorage.getItem('snakeA11y') === '1') {
   accessibilityToggle.classList.add('active');
   accessibilityToggle.textContent = 'ON';
   accessibilityToggle.setAttribute('aria-checked', 'true');
+}
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
 }
 </script>
 <script type="module" src="game.js"></script>
