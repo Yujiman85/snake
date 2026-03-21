@@ -193,16 +193,21 @@ function getFoodCount() {
 }
 
 function spawnOneFood() {
-  let pos;
-  do {
-    pos = { x: Math.floor(Math.random() * GRID), y: Math.floor(Math.random() * GRID) };
-  } while (
-    snake.some(s => s.x === pos.x && s.y === pos.y) ||
-    (snake2 && snake2.some(s => s.x === pos.x && s.y === pos.y)) ||
-    foods.some(f => f.x === pos.x && f.y === pos.y) ||
-    obstacles.some(o => o.x === pos.x && o.y === pos.y)
-  );
-  foods.push(pos);
+  // Build set of occupied cells to avoid infinite loop on full grids
+  const occupied = new Set();
+  snake.forEach(s => occupied.add(`${s.x},${s.y}`));
+  if (snake2) snake2.forEach(s => occupied.add(`${s.x},${s.y}`));
+  foods.forEach(f => occupied.add(`${f.x},${f.y}`));
+  obstacles.forEach(o => occupied.add(`${o.x},${o.y}`));
+
+  const free = [];
+  for (let x = 0; x < GRID; x++) {
+    for (let y = 0; y < GRID; y++) {
+      if (!occupied.has(`${x},${y}`)) free.push({ x, y });
+    }
+  }
+  if (free.length === 0) return;
+  foods.push(free[Math.floor(Math.random() * free.length)]);
 }
 
 function spawnAllFood() {
@@ -684,57 +689,7 @@ function drawSnakeInterp(s, d, color, colorRgb) {
   });
 }
 
-function draw() {
-  ctx.fillStyle = '#111122';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.02)';
-  ctx.lineWidth = 0.5;
-  for (let i = 0; i <= GRID; i++) {
-    ctx.beginPath();
-    ctx.moveTo(i * TILE, 0);
-    ctx.lineTo(i * TILE, canvas.height);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(0, i * TILE);
-    ctx.lineTo(canvas.width, i * TILE);
-    ctx.stroke();
-  }
-
-  updateParticles();
-  if (eatFlash > 0) eatFlash--;
-
-  const sc = easyMode ? '#4ade80' : '#22d3ee';
-  const sr = easyMode ? '74, 222, 128' : '34, 211, 238';
-  drawSnakeInterp(snake, dir, sc, sr);
-  if (snake2) drawSnakeInterp(snake2, dir2, '#f472b6', '244, 114, 182');
-  ctx.shadowBlur = 0;
-
-  const pulse = 0.8 + 0.2 * Math.sin(Date.now() / 200);
-  foods.forEach(f => {
-    ctx.fillStyle = `rgba(239, 68, 68, ${pulse})`;
-    ctx.shadowColor = '#ef4444';
-    ctx.shadowBlur = 12;
-    ctx.beginPath();
-    ctx.arc(f.x * TILE + TILE / 2, f.y * TILE + TILE / 2, TILE / 2 - 2, 0, Math.PI * 2);
-    ctx.fill();
-  });
-  ctx.shadowBlur = 0;
-
-  // Obstacles
-  if (obstaclesActive) {
-    obstacles.forEach(o => {
-      const shimmer = 0.7 + 0.15 * Math.sin(Date.now() / 300 + o.x * 0.5 + o.y * 0.7);
-      ctx.fillStyle = `rgba(59, 130, 246, ${shimmer})`;
-      ctx.shadowColor = '#3b82f6';
-      ctx.shadowBlur = 6;
-      roundRect(o.x * TILE + 1, o.y * TILE + 1, TILE - 2, TILE - 2, 4);
-    });
-    ctx.shadowBlur = 0;
-  }
-
-  drawParticles();
-}
 
 function spawnParticles(cx, cy) {
   for (let i = 0; i < 12; i++) {
