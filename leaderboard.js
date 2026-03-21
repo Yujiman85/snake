@@ -1,9 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getDatabase, ref, push, query, orderByChild, limitToLast, get } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
-import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app-check.js";
-
 // Firebase config — API key is public by design for client-side apps.
-// Security is enforced via Firebase security rules and App Check attestation.
+// Security is enforced via Firebase security rules.
+// TODO: Set up Firebase App Check with reCAPTCHA Enterprise to prevent automated abuse.
 const firebaseConfig = {
   apiKey: "AIzaSyByzQDytoBYzkw0kBaXlZ28ANMHmZogn4o",
   authDomain: "snake-abefb.firebaseapp.com",
@@ -16,19 +15,8 @@ const firebaseConfig = {
 };
 
 const fbApp = initializeApp(firebaseConfig);
-
-// App Check — prevents unauthorized API usage from scripts/bots.
-// Debug token is used on localhost; reCAPTCHA Enterprise on production.
-const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-if (isDev) {
-  self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-}
-initializeAppCheck(fbApp, {
-  provider: new ReCaptchaEnterpriseProvider('YOUR_RECAPTCHA_SITE_KEY'),
-  isTokenAutoRefreshEnabled: true
-});
-
 const db = getDatabase(fbApp);
+const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 const prefix = isDev ? 'leaderboard-dev' : 'leaderboard';
 const refs = {
   normal: ref(db, prefix),
