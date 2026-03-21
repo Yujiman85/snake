@@ -1,4 +1,5 @@
-const CACHE_NAME = 'snake-v1';
+// Bump this version on each deploy to clear stale caches
+const CACHE_NAME = 'snake-v2';
 const ASSETS = [
   './',
   './index.html',

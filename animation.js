@@ -87,7 +87,16 @@ export function initChaseAnimation() {
     }
   }
 
+  let animId = null;
+  let stopped = false;
+
   function animateScene() {
+    if (stopped) return;
+    // Skip rendering when canvas is not visible (e.g., during gameplay)
+    if (sc.offsetParent === null) {
+      animId = requestAnimationFrame(animateScene);
+      return;
+    }
     sctx.clearRect(0, 0, W, H);
     switch (phase) {
       case 'approach':
@@ -117,7 +126,12 @@ export function initChaseAnimation() {
         if (timer > 60) resetScene();
         break;
     }
-    requestAnimationFrame(animateScene);
+    animId = requestAnimationFrame(animateScene);
   }
-  requestAnimationFrame(animateScene);
+  animId = requestAnimationFrame(animateScene);
+
+  return function stop() {
+    stopped = true;
+    if (animId) cancelAnimationFrame(animId);
+  };
 }

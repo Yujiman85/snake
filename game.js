@@ -158,6 +158,7 @@ function init() {
   highScoreEntryEl.style.display = 'none';
   gameOverEl.classList.remove('active');
   startScreenEl.classList.remove('active');
+  if (stopChaseAnimation) stopChaseAnimation();
   paused = false;
   pauseBtn.style.display = 'inline-block';
   pauseBtn.textContent = '\u23F8';
@@ -379,6 +380,8 @@ function runCutscene() {
   }
 }
 
+// Called each frame by renderLoop() when cutscene.phase === 'startCountdown'.
+// Does not self-schedule — relies on renderLoop's rAF cycle to drive it.
 function runStartCountdown() {
   if (!cutscene) return;
 
@@ -854,6 +857,7 @@ document.getElementById('restartBtn').addEventListener('click', init);
 document.getElementById('menuBtn').addEventListener('click', () => {
   gameOverEl.classList.remove('active');
   startScreenEl.classList.add('active');
+  stopChaseAnimation = initChaseAnimation();
   renderLeaderboard('startLeaderboard', expertMode ? 'expert' : 'normal');
 });
 document.getElementById('startBtn').addEventListener('click', init);
@@ -999,4 +1003,4 @@ fetchAllLeaderboards().then(() => {
 });
 
 // Start the chase animation
-initChaseAnimation();
+let stopChaseAnimation = initChaseAnimation();
