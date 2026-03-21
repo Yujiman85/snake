@@ -782,6 +782,7 @@ async function endGame() {
   pendingScore = score;
 
   const mode = expertMode ? 'expert' : 'normal';
+  await fetchAllLeaderboards();
   if (!easyMode && isTopTen(score, mode)) {
     highScoreEntryEl.style.display = 'block';
     submitScoreBtn.disabled = false;
