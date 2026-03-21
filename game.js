@@ -16,9 +16,12 @@ const GRID = 20;
 const TILE = canvas.width / GRID;
 const SPEED_INITIAL = 120;
 const SPEED_MIN = 60;
+const SPEED_INITIAL_EASY = 150;
+const SPEED_MIN_EASY = 80;
 
 let snake, dir, nextDir, foods, score, highScore, gameLoop, running;
 let snake2, dir2, nextDir2;
+let easyMode = false;
 let expertMode = false;
 let particles = [];
 let eatFlash = 0;
@@ -40,12 +43,14 @@ let paused = false;
 const pauseBtn = document.getElementById('pauseBtn');
 
 // Difficulty toggle
+const diffEasyBtn = document.getElementById('diffEasy');
 const diffNormalBtn = document.getElementById('diffNormal');
 const diffExpertBtn = document.getElementById('diffExpert');
 const controlsNormal = document.getElementById('controlsNormal');
 const controlsExpert = document.getElementById('controlsExpert');
 const startTitle = startScreenEl.querySelector('h2');
 const startBtn = document.getElementById('startBtn');
+const easyDisclaimer = document.getElementById('easyDisclaimer');
 
 let titleAnim = null;
 
@@ -80,26 +85,31 @@ function animateTitle(from, to) {
 }
 
 function setDifficulty(mode) {
-  const wasExpert = expertMode;
+  const prevTitle = expertMode ? 'Simulsnake!' : 'Snake';
+  easyMode = mode === 'easy';
   expertMode = mode === 'expert';
-  diffNormalBtn.classList.toggle('active', !expertMode);
+
+  diffEasyBtn.classList.toggle('active', easyMode);
+  diffNormalBtn.classList.toggle('active', mode === 'normal');
   diffExpertBtn.classList.toggle('active', expertMode);
   controlsNormal.style.display = expertMode ? 'none' : 'flex';
   controlsExpert.style.display = expertMode ? 'flex' : 'none';
+  easyDisclaimer.style.display = easyMode ? 'block' : 'none';
 
   // Color and title transitions
-  scoreEl.classList.toggle('expert', expertMode);
-  if (expertMode && !wasExpert) {
-    startTitle.style.color = '#f472b6';
-    startBtn.style.background = '#f472b6';
-    animateTitle('Snake', 'Simulsnake!');
-  } else if (!expertMode && wasExpert) {
-    startTitle.style.color = '#22d3ee';
-    startBtn.style.background = '#22d3ee';
-    animateTitle('Simulsnake!', 'Snake');
-  }
+  scoreEl.classList.remove('easy', 'expert');
+  if (easyMode) scoreEl.classList.add('easy');
+  if (expertMode) scoreEl.classList.add('expert');
+
+  const colors = { easy: '#4ade80', normal: '#22d3ee', expert: '#f472b6' };
+  startTitle.style.color = colors[mode];
+  startBtn.style.background = colors[mode];
+
+  const newTitle = expertMode ? 'Simulsnake!' : 'Snake';
+  if (newTitle !== prevTitle) animateTitle(prevTitle, newTitle);
 }
 
+diffEasyBtn.addEventListener('click', () => setDifficulty('easy'));
 diffNormalBtn.addEventListener('click', () => setDifficulty('normal'));
 diffExpertBtn.addEventListener('click', () => setDifficulty('expert'));
 
@@ -131,7 +141,9 @@ function init() {
   }
   score = 0;
   scoreEl.textContent = 0;
-  scoreEl.classList.toggle('expert', expertMode);
+  scoreEl.classList.remove('easy', 'expert');
+  if (easyMode) scoreEl.classList.add('easy');
+  if (expertMode) scoreEl.classList.add('expert');
   particles = [];
   eatFlash = 0;
   pendingScore = 0;
@@ -149,7 +161,8 @@ function init() {
   foods = [];
   spawnAllFood();
   clearInterval(gameLoop);
-  currentTickInterval = SPEED_INITIAL;
+  const initSpeed = easyMode ? SPEED_INITIAL_EASY : SPEED_INITIAL;
+  currentTickInterval = initSpeed;
   prevSnake = snake.map(s => ({ ...s }));
   prevSnake2 = snake2 ? snake2.map(s => ({ ...s })) : [];
   if (!animFrameId) animFrameId = requestAnimationFrame(renderLoop);
@@ -163,7 +176,7 @@ function init() {
   } else {
     running = true;
     lastTickTime = performance.now();
-    gameLoop = setInterval(update, SPEED_INITIAL);
+    gameLoop = setInterval(update, initSpeed);
   }
 }
 
@@ -420,7 +433,9 @@ function drawGameState() {
     ctx.stroke();
   }
 
-  drawSnakeInterp(snake, dir, '#22d3ee', '34, 211, 238');
+  const sc = easyMode ? '#4ade80' : '#22d3ee';
+  const sr = easyMode ? '74, 222, 128' : '34, 211, 238';
+  drawSnakeInterp(snake, dir, sc, sr);
   if (snake2) drawSnakeInterp(snake2, dir2, '#f472b6', '244, 114, 182');
   ctx.shadowBlur = 0;
 
@@ -502,11 +517,15 @@ function update() {
   const ate = score > prevScore;
 
   // Handle post-move (food respawn, speed, obstacles)
-  if (ate && score >= 50 && score % 20 === 0) {
+  if (!easyMode && ate && score >= 50 && score % 20 === 0) {
     activateObstacles();
   } else if (ate) {
     spawnAllFood();
-    if (score < 50) {
+    if (easyMode) {
+      clearInterval(gameLoop);
+      currentTickInterval = Math.max(SPEED_MIN_EASY, SPEED_INITIAL_EASY - score * 1.5);
+      gameLoop = setInterval(update, currentTickInterval);
+    } else if (score < 50) {
       clearInterval(gameLoop);
       currentTickInterval = Math.max(SPEED_MIN, SPEED_INITIAL - score * 2.5);
       gameLoop = setInterval(update, currentTickInterval);
@@ -557,7 +576,9 @@ function renderLoop() {
 
   updateParticles();
 
-  drawSnakeInterp(interpSnake, dir, '#22d3ee', '34, 211, 238');
+  const snakeColor = easyMode ? '#4ade80' : '#22d3ee';
+  const snakeRgb = easyMode ? '74, 222, 128' : '34, 211, 238';
+  drawSnakeInterp(interpSnake, dir, snakeColor, snakeRgb);
   if (interpSnake2) drawSnakeInterp(interpSnake2, dir2, '#f472b6', '244, 114, 182');
   ctx.shadowBlur = 0;
 
@@ -593,8 +614,9 @@ function renderLoop() {
     ctx.font = 'bold 64px "Segoe UI", system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#22d3ee';
-    ctx.shadowColor = '#22d3ee';
+    const pauseColor = easyMode ? '#4ade80' : expertMode ? '#f472b6' : '#22d3ee';
+    ctx.fillStyle = pauseColor;
+    ctx.shadowColor = pauseColor;
     ctx.shadowBlur = 20;
     ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
     ctx.shadowBlur = 0;
@@ -673,7 +695,9 @@ function draw() {
   updateParticles();
   if (eatFlash > 0) eatFlash--;
 
-  drawSnakeInterp(snake, dir, '#22d3ee', '34, 211, 238');
+  const sc = easyMode ? '#4ade80' : '#22d3ee';
+  const sr = easyMode ? '74, 222, 128' : '34, 211, 238';
+  drawSnakeInterp(snake, dir, sc, sr);
   if (snake2) drawSnakeInterp(snake2, dir2, '#f472b6', '244, 114, 182');
   ctx.shadowBlur = 0;
 
@@ -743,7 +767,8 @@ function updateParticles() {
 function drawParticles() {
   particles.forEach(p => {
     if (p.ring) {
-      ctx.strokeStyle = `rgba(34, 211, 238, ${p.life * 0.6})`;
+      const ringRgb = easyMode ? '74, 222, 128' : '34, 211, 238';
+      ctx.strokeStyle = `rgba(${ringRgb}, ${p.life * 0.6})`;
       ctx.lineWidth = 2 * p.life;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
@@ -789,7 +814,7 @@ async function endGame() {
   pendingScore = score;
 
   const mode = expertMode ? 'expert' : 'normal';
-  if (isTopTen(score, mode)) {
+  if (!easyMode && isTopTen(score, mode)) {
     highScoreEntryEl.style.display = 'block';
     submitScoreBtn.disabled = false;
     setTimeout(() => playerNameEl.focus(), 100);
@@ -797,7 +822,7 @@ async function endGame() {
     highScoreEntryEl.style.display = 'none';
   }
 
-  renderLeaderboard('gameOverLeaderboard', mode);
+  renderLeaderboard('gameOverLeaderboard', easyMode ? 'normal' : mode);
   gameOverEl.classList.add('active');
 }
 

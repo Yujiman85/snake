@@ -47,6 +47,10 @@ h1 {
   transition: color 0.3s ease;
 }
 
+.score-bar .score-value.easy {
+  color: #4ade80;
+}
+
 .score-bar .score-value.expert {
   color: #f472b6;
 }
@@ -218,6 +222,10 @@ kbd {
 .diff-btn.active {
   background: #22d3ee;
   color: #0f0f0f;
+}
+
+.diff-btn[data-mode="easy"].active {
+  background: #4ade80;
 }
 
 .diff-btn[data-mode="expert"].active {
@@ -764,7 +772,11 @@ kbd {
   }
 
   .difficulty-toggle {
-    display: none !important;
+    display: flex !important;
+  }
+
+  .diff-btn[data-mode="expert"] {
+    display: none;
   }
 
   .btn {
